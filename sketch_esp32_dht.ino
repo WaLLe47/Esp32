@@ -12,6 +12,7 @@ const char* apPassword = "password";
 
 bool wifiConnected = false;
 bool apStarted = false;
+bool WiFiPing = false;
 
 uint32_t wifiTimer = millis();
 uint32_t telegramTimer = millis();
@@ -38,7 +39,7 @@ void setup() {
 
 void loop() {
   work_portal();
-  if ((millis() - wifiTimer)>10000) {
+  if (WiFiPing && (millis() - wifiTimer)>10000) {
     work_wifi();
     wifiTimer = millis();
   }

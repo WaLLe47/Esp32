@@ -64,8 +64,10 @@ void action() {
     WiFi_Connect();
     if (WiFi.status() == WL_CONNECTED) {
       saveEEPROM();
+      WiFiPing = true;
       portal.attachBuild(yesWifi);
     } else {
+      WiFiPing= false; 
       portal.attachBuild(noWifi);
     }
   } else if (portal.form("/noWifi")) {

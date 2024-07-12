@@ -48,6 +48,7 @@ void WiFi_Connect() {
     if (bot == nullptr) {
       bot = new UniversalTelegramBot(BOTtoken, client);
     }
+    WiFiPing = true;
   }
 }
 
