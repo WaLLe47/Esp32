@@ -14,8 +14,7 @@ bool wifiConnected = false;
 bool apStarted = false;
 bool WiFiPing = false;
 
-uint32_t wifiTimer = millis();
-uint32_t telegramTimer = millis();
+uint32_t TimerAll = millis();
 uint32_t chartUpdateTimer = millis();
 
 // интервал обновления графика 60 секунд
@@ -39,14 +38,11 @@ void setup() {
 
 void loop() {
   work_portal();
-  if (WiFiPing && (millis() - wifiTimer)>10000) {
+  if (WiFiPing && (millis() - TimerAll)>5000) {
     work_wifi();
-    wifiTimer = millis();
-  }
-  if ((millis() - telegramTimer)>1000) {
     work_telegram();
-    telegramTimer = millis();
-  }  
+    TimerAll = millis();
+  }
   if ((millis() - chartUpdateTimer) > CHART_UPDATE_INTERVAL) {
     updateChartData();
     chartUpdateTimer = millis();
