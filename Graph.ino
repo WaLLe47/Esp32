@@ -2,39 +2,54 @@
 
 GyverPortal portal;
 
-extern float temperatureData[10];
-extern float humidityData[10];
+extern float temperatureData[60];
+extern float humidityData[60];
+extern uint32_t timeData[60];
+extern float hourlyTemperatureData[24];
+extern float hourlyHumidityData[24];
+extern uint32_t hourlyTimeData[24];
+
+void createLabels(const uint32_t* timeData, int count, char labels[][6]) {
+  for (int i = 0; i < count; ++i) {
+    int minutes = (timeData[i] / 60000) % 60;
+    int hours = (timeData[i] / 3600000) % 24;
+    sprintf(labels[i], "%02d:%02d", hours, minutes);
+  }
+}
 
 void showGraph() {
   GP.BUILD_BEGIN();
   GP.TITLE("ESP-32S График температуры и влажности");
 
-  // Создаем двумерный массив данных для графика
-  int16_t data[2][10];
-  for (int i = 0; i < 10; i++) {
-    data[0][i] = static_cast<int16_t>(temperatureData[i] * 100); // Преобразование в int16_t
-    data[1][i] = static_cast<int16_t>(humidityData[i] * 100); // Преобразование в int16_t
+  char minuteLabels[60][6];
+  createLabels(timeData, 60, minuteLabels);
+  const char* minuteLabelPtrs[60];
+  for (int i = 0; i < 60; ++i) {
+    minuteLabelPtrs[i] = minuteLabels[i];
   }
-  // Вывод данных для отладки
-  Serial.println("Temperature Data:");
-  for (int i = 0; i < 10; i++) {
-    Serial.print(temperatureData[i]);
-    Serial.print(", ");
-  }
-  Serial.println();
-  
-  Serial.println("Humidity Data:");
-  for (int i = 0; i < 10; i++) {
-    Serial.print(humidityData[i]);
-    Serial.print(", ");
-  }
-  Serial.println();
 
-  // Массивы подписей для осей
-  const char* labels[] = {"Температура", "Влажность"};
+  char hourlyLabels[24][6];
+  createLabels(hourlyTimeData, 24, hourlyLabels);
+  const char* hourlyLabelPtrs[24];
+  for (int i = 0; i < 24; ++i) {
+    hourlyLabelPtrs[i] = hourlyLabels[i];
+  }
 
-  // Отрисовываем график
-  GP.PLOT<2, 10>("graph", labels, data, 100);
+  int16_t minuteData[2][60];
+  int16_t hourlyData[2][24];
+
+  for (int i = 0; i < 60; ++i) {
+    minuteData[0][i] = static_cast<int16_t>(temperatureData[i] * 100);
+    minuteData[1][i] = static_cast<int16_t>(humidityData[i] * 100);
+  }
+
+  for (int i = 0; i < 24; ++i) {
+    hourlyData[0][i] = static_cast<int16_t>(hourlyTemperatureData[i] * 100);
+    hourlyData[1][i] = static_cast<int16_t>(hourlyHumidityData[i] * 100);
+  }
+
+  GP.PLOT_STOCK<2, 60>("График за последний час", minuteLabelPtrs, timeData, minuteData, 100);
+  GP.PLOT_STOCK<2, 24>("График за последние 24 часа", hourlyLabelPtrs, hourlyTimeData, hourlyData, 100);
 
   Temperature = dht.readTemperature();
   Humidity = dht.readHumidity();

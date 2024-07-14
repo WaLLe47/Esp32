@@ -34,19 +34,46 @@ void readEEPROM() {
   EEPROM.get(sizeof(ssidwifi) + sizeof(passwifi) + sizeof(BOTtoken), CHAT_ID);
 }
 
-// работа с графиком
+// работа с графиком за час
 void updateChartData() {
   Temperature = dht.readTemperature();
   Humidity = dht.readHumidity();
 
-  for (int i = 8; i >= 0; i--) {
+  for (int i = 58; i >= 0; i--) {
     temperatureData[i + 1] = temperatureData[i];
     humidityData[i + 1] = humidityData[i];
+    timeData[i + 1] = timeData[i];
   }
   temperatureData[0] = Temperature;
   humidityData[0] = Humidity;
+  timeData[0] = millis(); // Сохранение временной метки
+
+  tempSum += Temperature;
+  humSum += Humidity;
+  minuteCount++;
 
   saveChartData();
+}
+
+// работа с графиком за день
+void updateHourlyData() {
+  float tempAverage = tempSum / minuteCount;
+  float humAverage = humSum / minuteCount;
+
+  for (int i = 22; i >= 0; i--) {
+    hourlyTemperatureData[i + 1] = hourlyTemperatureData[i];
+    hourlyHumidityData[i + 1] = hourlyHumidityData[i];
+    hourlyTimeData[i + 1] = hourlyTimeData[i];
+  }
+  hourlyTemperatureData[0] = tempAverage;
+  hourlyHumidityData[0] = humAverage;
+  hourlyTimeData[0] = millis(); // Сохранение временной метки
+
+  tempSum = 0;
+  humSum = 0;
+  minuteCount = 0;
+
+  saveHourlyData();
 }
 
 // работа с графиком
@@ -54,12 +81,28 @@ void saveChartData() {
   int addr = sizeof(ssidwifi) + sizeof(passwifi) + sizeof(BOTtoken) + sizeof(CHAT_ID);
   EEPROM.put(addr, temperatureData);
   EEPROM.put(addr + sizeof(temperatureData), humidityData);
+  EEPROM.put(addr + sizeof(temperatureData) + sizeof(humidityData), timeData);
   EEPROM.commit();
 }
 
-// работа с графиком
 void readChartData() {
   int addr = sizeof(ssidwifi) + sizeof(passwifi) + sizeof(BOTtoken) + sizeof(CHAT_ID);
   EEPROM.get(addr, temperatureData);
   EEPROM.get(addr + sizeof(temperatureData), humidityData);
+   EEPROM.get(addr + sizeof(temperatureData) + sizeof(humidityData), timeData);
+}
+
+void saveHourlyData() {
+  int addr = sizeof(ssidwifi) + sizeof(passwifi) + sizeof(BOTtoken) + sizeof(CHAT_ID) + sizeof(temperatureData) + sizeof(humidityData) + sizeof(timeData);
+  EEPROM.put(addr, hourlyTemperatureData);
+  EEPROM.put(addr + sizeof(hourlyTemperatureData), hourlyHumidityData);
+  EEPROM.put(addr + sizeof(hourlyTemperatureData) + sizeof(hourlyHumidityData), hourlyTimeData);
+  EEPROM.commit();
+}
+
+void readHourlyData() {
+  int addr = sizeof(ssidwifi) + sizeof(passwifi) + sizeof(BOTtoken) + sizeof(CHAT_ID) + sizeof(temperatureData) + sizeof(humidityData) + sizeof(timeData);
+  EEPROM.get(addr, hourlyTemperatureData);
+  EEPROM.get(addr + sizeof(hourlyTemperatureData), hourlyHumidityData);
+  EEPROM.get(addr + sizeof(hourlyTemperatureData) + sizeof(hourlyHumidityData), hourlyTimeData);
 }
