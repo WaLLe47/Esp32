@@ -4,9 +4,11 @@ void setup_portal() {
   portal.attach(action);
   portal.attachBuild(showGraph);
   portal.start("esp32");  //запуск с поддержкой mDNS,
+  timeClient.begin();
 }
 void work_portal() {
   portal.tick();
+  timeClient.update();
 }
 
 void build() {

@@ -1,14 +1,23 @@
 #include <EEPROM.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
+
+const long utcOffsetInSeconds = 3600 * 8;
+const char* ntpServer = "pool.ntp.org";
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, ntpServer, utcOffsetInSeconds);
 
 #define EEPROM_SIZE 4096
 
 void setup_eeprom() {
   if (!EEPROM.begin(EEPROM_SIZE)) {
     Serial.println("Не удалось инициализировать EEPROM");
-    while (1); // Вместо микроконтроллера бездушный камень, реализовать перезагрузку
+    while (1)
+      ;  // Вместо микроконтроллера бездушный камень, реализовать перезагрузку
   }
-   readEEPROM();
-   readChartData(); // чтение данных графика из EEPROM
+  readEEPROM();
+  readChartData();  // чтение данных графика из EEPROM
 }
 
 void saveEEPROM() {
@@ -46,7 +55,7 @@ void updateChartData() {
   }
   temperatureData[0] = Temperature;
   humidityData[0] = Humidity;
-  timeData[0] = millis(); // Сохранение временной метки
+  timeData[0] = timeClient.getEpochTime();  // Сохранение временной метки
 
   tempSum += Temperature;
   humSum += Humidity;
@@ -67,7 +76,7 @@ void updateHourlyData() {
   }
   hourlyTemperatureData[0] = tempAverage;
   hourlyHumidityData[0] = humAverage;
-  hourlyTimeData[0] = millis(); // Сохранение временной метки
+  hourlyTimeData[0] = timeClient.getEpochTime();  // Сохранение временной метки
 
   tempSum = 0;
   humSum = 0;
@@ -89,7 +98,7 @@ void readChartData() {
   int addr = sizeof(ssidwifi) + sizeof(passwifi) + sizeof(BOTtoken) + sizeof(CHAT_ID);
   EEPROM.get(addr, temperatureData);
   EEPROM.get(addr + sizeof(temperatureData), humidityData);
-   EEPROM.get(addr + sizeof(temperatureData) + sizeof(humidityData), timeData);
+  EEPROM.get(addr + sizeof(temperatureData) + sizeof(humidityData), timeData);
 }
 
 void saveHourlyData() {
