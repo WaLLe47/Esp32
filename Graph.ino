@@ -11,10 +11,15 @@ extern uint32_t hourlyTimeData[24];
 
 void createLabels(const uint32_t* timeData, int count, char labels[][6]) {
   for (int i = 0; i < count; ++i) {
-    int minutes = (timeData[i] / 60000) % 60;
-    int hours = (timeData[i] / 3600000) % 24;
+    int minutes = (timeData[i]) % 60;
+    int hours = (timeData[i] / 3600) % 24;
     sprintf(labels[i], "%02d:%02d", hours, minutes);
+    Serial.print("Label ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(labels[i]);
   }
+  Serial.println("-------------------------------");
 }
 
 void showGraph() {
@@ -24,12 +29,12 @@ void showGraph() {
   char minuteLabels[60][6];
   createLabels(timeData, 60, minuteLabels);
   const char* minuteLabelPtrs[60];
-  for (int i = 0; i < 60; ++i) {
+  for (int i = 0; i < 59; ++i) {
     minuteLabelPtrs[i] = minuteLabels[i];
   }
 
   char hourlyLabels[24][6];
-  createLabels(hourlyTimeData, 24, hourlyLabels);
+  createLabels(hourlyTimeData, 23, hourlyLabels);
   const char* hourlyLabelPtrs[24];
   for (int i = 0; i < 24; ++i) {
     hourlyLabelPtrs[i] = hourlyLabels[i];

@@ -5,6 +5,7 @@ void setup_portal() {
   portal.attachBuild(showGraph);
   portal.start("esp32");  //запуск с поддержкой mDNS,
   timeClient.begin();
+  timeClient.setTimeOffset(28800);
 }
 void work_portal() {
   portal.tick();

@@ -2,11 +2,8 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
 
-const long utcOffsetInSeconds = 3600 * 8;
-const char* ntpServer = "pool.ntp.org";
-
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, ntpServer, utcOffsetInSeconds);
+NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600);
 
 #define EEPROM_SIZE 4096
 
@@ -16,6 +13,10 @@ void setup_eeprom() {
     while (1)
       ;  // Вместо микроконтроллера бездушный камень, реализовать перезагрузку
   }
+  /*for (int i = 0; i < EEPROM_SIZE; i++) {
+    EEPROM.write(i, 0);  // Записываем 0 во все адреса EEPROM
+  }
+  EEPROM.commit();  // Применяем изменения в EEPROM*/
   readEEPROM();
   readChartData();  // чтение данных графика из EEPROM
 }
@@ -47,15 +48,21 @@ void readEEPROM() {
 void updateChartData() {
   Temperature = dht.readTemperature();
   Humidity = dht.readHumidity();
+  uint32_t currentTime = timeClient.getEpochTime();  // Получаем текущее время только один раз
 
+  // Сдвиг данных
   for (int i = 58; i >= 0; i--) {
     temperatureData[i + 1] = temperatureData[i];
     humidityData[i + 1] = humidityData[i];
     timeData[i + 1] = timeData[i];
   }
+
+  // Запись новых данных
   temperatureData[0] = Temperature;
   humidityData[0] = Humidity;
-  timeData[0] = timeClient.getEpochTime();  // Сохранение временной метки
+  timeData[0] = currentTime;
+
+  Serial.println(timeData[0]);
 
   tempSum += Temperature;
   humSum += Humidity;
@@ -64,19 +71,22 @@ void updateChartData() {
   saveChartData();
 }
 
-// работа с графиком за день
 void updateHourlyData() {
   float tempAverage = tempSum / minuteCount;
   float humAverage = humSum / minuteCount;
+  uint32_t currentTime = timeClient.getEpochTime();  // Получаем текущее время только один раз
 
+  // Сдвиг данных
   for (int i = 22; i >= 0; i--) {
     hourlyTemperatureData[i + 1] = hourlyTemperatureData[i];
     hourlyHumidityData[i + 1] = hourlyHumidityData[i];
     hourlyTimeData[i + 1] = hourlyTimeData[i];
   }
+
+  // Запись новых данных
   hourlyTemperatureData[0] = tempAverage;
   hourlyHumidityData[0] = humAverage;
-  hourlyTimeData[0] = timeClient.getEpochTime();  // Сохранение временной метки
+  hourlyTimeData[0] = currentTime;
 
   tempSum = 0;
   humSum = 0;
@@ -84,6 +94,7 @@ void updateHourlyData() {
 
   saveHourlyData();
 }
+
 
 // работа с графиком
 void saveChartData() {
